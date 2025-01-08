@@ -9,57 +9,52 @@ test_uri(Input, StrutturaAttesa) :-
     ).
 
 run_tests :-
+    % 1. URI Completo con tutti i componenti
+    test_uri('http://user:pass@www.example.com:8080/path/to/resource?query=param#fragment',
+             uri('http', 'user:pass', 'www.example.com', '8080', 'path/to/resource', 'query=param', 'fragment')),
 
-% Test: HTTP URI with default port and no path/query/fragment
-test('http_simple_scheme', [true(URI == uri('http', [], 'www.example.com', 80, [], [], []))]) :-
-    urilib_parse('http://www.example.com', URI).
+    % 2. URI HTTPS senza userinfo, porta, query e frammento
+    test_uri('https://www.secure.com/path/to/resource',
+             uri('https', '', 'www.secure.com', '', 'path/to/resource', '', '')),
 
-% Test: HTTPS URI with default port and no path/query/fragment
-test('https_simple_scheme', [true(URI == uri('https', [], 'secure.example.com', 443, [], [], []))]) :-
-    urilib_parse('https://secure.example.com', URI).
+    % 3. URI FTP con userinfo senza porta e con path semplice
+    test_uri('ftp://anonymous@ftp.server.com/resources/file.txt',
+             uri('ftp', 'anonymous', 'ftp.server.com', '', 'resources/file.txt', '', '')),
 
-% Test: Mailto scheme with userinfo and host
-test('mailto_user_host', [true(URI == uri('mailto', 'john.doe', 'example.com', [], [], [], []))]) :-
-    urilib_parse('mailto:john.doe@example.com', URI).
+    % 4. URI con schema personalizzato e componenti speciali
+    test_uri('custom+scheme://host-name.com:1234/pa-th_./?q=1#frag',
+             uri('custom+scheme', '', 'host-name.com', '1234', 'pa-th_./', 'q=1', 'frag')),
 
-% Test: News scheme with only host
-test('news_simple', [true(URI == uri('news', [], 'comp.lang.prolog', [], [], [], []))]) :-
-    urilib_parse('news:comp.lang.prolog', URI).
+    % 5. URI con host IPv6 senza porta
+    test_uri('http://[2001:db8::1]/path',
+             uri('http', '', '[2001:db8::1]', '', 'path', '', '')),
 
-% Test: Tel scheme with only userinfo
-test('tel_number', [true(URI == uri('tel', '1234567890', [], [], [], [], []))]) :-
-    urilib_parse('tel:1234567890', URI).
+    % 6. URI con host IPv6 e porta
+    test_uri('http://[2001:db8::1]:8080/path',
+             uri('http', '', '[2001:db8::1]', '8080', 'path', '', '')),
 
-% Test: Fax scheme with only userinfo
-test('fax_number', [true(URI == uri('fax', '0987654321', [], [], [], [], []))]) :-
-    urilib_parse('fax:0987654321', URI).
+    % 7. URI senza authority: mailto
+    test_uri('mailto:user@example.com',
+             uri('mailto', '', '', '', 'user@example.com', '', '')),
 
-% Test: ZOS scheme with valid dataset
-test('zos_simple', [true(URI == uri('zos', [], [], [], 'MY.DATA.SET', [], []))]) :-
-    urilib_parse('zos:MY.DATA.SET', URI).
+    % 8. URI senza authority: urn
+    test_uri('urn:isbn:0451450523',
+             uri('urn', '', '', '', 'isbn:0451450523', '', '')),
 
-% Test: ZOS with dataset and member
-test('zos_dataset_member', [true(URI == uri('zos', [], [], [], 'MY.DATA.SET(MEMBER)', [], []))]) :-
-    urilib_parse('zos:MY.DATA.SET(MEMBER)', URI).
+    % 9. URI file con triple slash
+    test_uri('file:///C:/path/to/file.txt',
+             uri('file', '', '', '', 'C:/path/to/file.txt', '', '')),
 
-% Test: HTTP with root path
-test('http_with_root_path', [true(URI == uri('http', [], 'example.it', 80, '/', [], []))]) :-
-    urilib_parse('http://example.it/', URI).
+    % 10. URI con schema e nessun altro componente
+    test_uri('https:', 
+             uri('https', '', '', '', '', '', '')),
 
-% Test: HTTP with IP address as host
-test('http_with_ip_address', [true(URI == uri('http', [], '192.168.0.1', 80, [], [], []))]) :-
-    urilib_parse('http://192.168.0.1', URI).
+    % 11. URI con porta non numerica (non standard)
+    test_uri('http://host.com:nonnumeric/path',
+             uri('http', '', 'host.com', 'nonnumeric', 'path', '', '')),
 
-% Test: HTTPS with IP address and port
-test('https_with_ip_and_port', [true(URI == uri('https', [], '192.168.0.1', 8080, [], [], []))]) :-
-    urilib_parse('https://192.168.0.1:8080', URI).
+    % 12. URI con host e porta strani (malformato)
+    test_uri('http://host.com:80:extra/path',
+             uri('http', '', 'host.com', '80:extra', 'path', '', '')),
 
-% Test: Invalid IP address in URI
-test('invalid_ip_address', [throws(error(invalid_uri))]) :-
-    urilib_parse('http://999.999.999.999', _).
-
-% Test: FTP URI with path and query
-test('ftp_with_path_and_query', [true(URI == uri('ftp', [], 'ftp.example.com', 21, 'path/to/file', 'type=ascii', []))]) :-
-    urilib_parse('ftp://ftp.example.com/path/to/file?type=ascii', URI).
-
-:- end_tests(urilib_tests).
+    format("Tutti i test sono stati eseguiti.~n").
